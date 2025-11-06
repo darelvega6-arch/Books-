@@ -1224,16 +1224,123 @@ setInterval(checkScheduledChapters, 60000);
   </script>
 </head>
 
-<!-- MODAL DE NOTIFICACIONES -->
-<div id="notifications-modal" class="fixed inset-0 z-50 hidden">
-  <div class="w-full h-full p-6 overflow-y-auto">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-bold">Bandeja de Entrada</h2>
-      <button onclick="closeNotifications()" class="text-gray-500 text-2xl">&times;</button>
+<!-- MODAL DE NOTIFICACIONES estilo Apple -->
+<div id="notifications-modal" class="fixed inset-0 z-50 hidden bg-gray-50">
+  <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xl">
+    <div class="flex items-center justify-between px-6 py-4">
+      <button onclick="closeNotifications()" class="text-blue-600 font-medium">Back</button>
+      <h2 class="text-lg font-semibold text-gray-900">Notifications</h2>
+      <button onclick="markAllAsRead()" class="text-blue-600 font-medium text-sm">Read All</button>
     </div>
-    <div id="notifications-list" class="space-y-4"></div>
+    
+    <!-- Filtros de notificaciones -->
+    <div class="flex space-x-2 px-6 pb-3 overflow-x-auto scrollbar-hide">
+      <button onclick="filterNotifications('all')" class="notif-filter active px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-medium whitespace-nowrap">All</button>
+      <button onclick="filterNotifications('likes')" class="notif-filter px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium whitespace-nowrap">Likes</button>
+      <button onclick="filterNotifications('comments')" class="notif-filter px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium whitespace-nowrap">Comments</button>
+      <button onclick="filterNotifications('follows')" class="notif-filter px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium whitespace-nowrap">Follows</button>
+      <button onclick="filterNotifications('updates')" class="notif-filter px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium whitespace-nowrap">Updates</button>
+    </div>
+  </div>
+  
+  <div class="px-6 py-4">
+    <div id="notifications-list" class="space-y-2"></div>
+    
+    <!-- Empty state -->
+    <div id="notifications-empty" class="hidden text-center py-16">
+      <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">No Notifications</h3>
+      <p class="text-sm text-gray-500">You're all caught up!</p>
+    </div>
   </div>
 </div>
+
+<style>
+.notification-item {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.notification-item:active {
+  transform: scale(0.98);
+}
+.notification-item.unread {
+  background: #EBF5FF;
+}
+.notification-item .avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.notification-item .content {
+  flex: 1;
+  min-width: 0;
+}
+.notification-item .title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 4px;
+}
+.notification-item .message {
+  font-size: 14px;
+  color: #6e6e73;
+  line-height: 1.4;
+}
+.notification-item .time {
+  font-size: 12px;
+  color: #86868b;
+  margin-top: 4px;
+}
+.notification-item .badge {
+  width: 8px;
+  height: 8px;
+  background: #007AFF;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+</style>
+
+<script>
+function filterNotifications(type) {
+  document.querySelectorAll('.notif-filter').forEach(btn => {
+    btn.classList.remove('active', 'bg-gray-900', 'text-white');
+    btn.classList.add('bg-gray-100', 'text-gray-900');
+  });
+  event.target.classList.add('active', 'bg-gray-900', 'text-white');
+  event.target.classList.remove('bg-gray-100', 'text-gray-900');
+  
+  // Aquí iría la lógica de filtrado
+  const notifications = document.querySelectorAll('.notification-item');
+  notifications.forEach(notif => {
+    if (type === 'all' || notif.dataset.type === type) {
+      notif.style.display = 'flex';
+    } else {
+      notif.style.display = 'none';
+    }
+  });
+}
+
+function markAllAsRead() {
+  document.querySelectorAll('.notification-item').forEach(item => {
+    item.classList.remove('unread');
+    const badge = item.querySelector('.badge');
+    if (badge) badge.remove();
+  });
+}
+</script>
 
 
 <!-- MODAL DE ERROR PARA USUARIO BLOQUEADO -->
@@ -1791,87 +1898,127 @@ setInterval(checkScheduledChapters, 60000);
 
 <body class="bg-white font-sans text-[#161823]">
   
-  <div id="auth-form" class="w-full h-screen flex flex-col justify-center p-6">
-    <!-- Centered title -->
-    <h1 id="auth-title" class="text-4xl font-bold text-center mb-8 text-[#FE2C55]">Zenvio</h1>
-    <!-- Form takes full available width -->
-    <form id="authForm" class="w-full space-y-6 max-w-lg mx-auto">
-      <input
-        id="emailInput"
-        type="email"
-        placeholder="Email address"
-        class="w-full p-4 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#FE2C55] transition"
-        required
-      >
-      <input
-        id="passwordInput"
-        type="password"
-        placeholder="Password"
-        class="w-full p-4 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#FE2C55] transition"
-        required
-      >
+  <div id="auth-form" class="w-full min-h-screen flex flex-col justify-center p-6 bg-white">
+    <!-- Apple-style logo -->
+    <div class="text-center mb-12 animate-fade-in">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-gray-900 to-gray-700 mb-4 shadow-2xl">
+        <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+        </svg>
+      </div>
+      <h1 id="auth-title" class="text-4xl font-semibold text-gray-900 mb-2 tracking-tight">Zenvio</h1>
+      <p class="text-base text-gray-500">Sign in to continue</p>
+    </div>
+    
+    <!-- Apple-style form -->
+    <form id="authForm" class="w-full space-y-4 max-w-sm mx-auto">
+      <div class="space-y-3">
+        <div class="relative">
+          <input
+            id="emailInput"
+            type="email"
+            placeholder="Email"
+            class="w-full px-4 py-4 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+            required
+          >
+        </div>
+        <div class="relative">
+          <input
+            id="passwordInput"
+            type="password"
+            placeholder="Password"
+            class="w-full px-4 py-4 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+            required
+          >
+        </div>
+      </div>
+      
       <button
         id="submitButton"
         type="submit"
-        class="w-full bg-[#FE2C55] text-white p-4 font-bold rounded-full transform hover:scale-105 transition"
+        class="w-full bg-blue-600 text-white py-4 font-semibold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all shadow-md mt-6"
       >
         Sign In
       </button>
-    </form>
-    <!-- Links and toggle below the form -->
-    <div class="mt-6 text-center space-y-4 max-w-lg mx-auto">
+      
       <a
         href="#"
         onclick="resetPassword()"
-        class="block text-sm text-gray-600 hover:text-[#FE2C55] transition"
+        class="block text-center text-sm text-blue-600 hover:text-blue-700 transition py-2"
       >
-        Forgot your password?
+        Forgot password?
       </a>
+    </form>
+    
+    <!-- Divider -->
+    <div class="flex items-center max-w-sm mx-auto my-8">
+      <div class="flex-1 border-t border-gray-200"></div>
+      <span class="px-4 text-xs text-gray-400 font-medium">OR</span>
+      <div class="flex-1 border-t border-gray-200"></div>
+    </div>
+    
+    <!-- Sign up section -->
+    <div class="text-center max-w-sm mx-auto">
+      <p class="text-sm text-gray-600 mb-4">Don't have an account?</p>
       <button
         id="toggleAuth"
-        class="block text-sm font-medium text-[#FE2C55] hover:text-[#25F4EE] transition"
+        class="w-full border-2 border-gray-900 text-gray-900 py-4 font-semibold rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all"
       >
-        Don't have an account? Sign up
+        Create Account
       </button>
-      <div id="authError" class="mt-4 text-red-500 hidden"></div>
+    </div>
+    
+    <div id="authError" class="mt-6 text-red-500 text-center text-sm hidden max-w-sm mx-auto"></div>
+    
+    <!-- Footer -->
+    <div class="text-center mt-12 text-xs text-gray-400 max-w-sm mx-auto">
+      <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
     </div>
   </div>
+  
+  <style>
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .animate-fade-in {
+      animation: fade-in 0.6s ease-out;
+    }
+    
+    /* Apple-style focus states */
+    input:focus {
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Smooth transitions */
+    * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
 </body>
 
 <!-- APLICACIÓN PRINCIPAL ESTILO TIKTOK (MODO CLARO) -->
 <div id="main-app" class="h-screen flex flex-col bg-white font-sans text-black">
-  <!-- TOP BAR WITH NAME + ICONS -->
-  <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 sticky top-0 z-50 bg-white">
-    <h1 id="app-name" class="text-2xl font-bold text-[#161823]">BeaBoo</h1>
-    <div class="flex items-center space-x-4">
-      <button onclick="openSearch()" aria-label="Buscar" class="relative w-6 h-6 text-[#161823] hover:text-[#FE2C55] transition">
-        <svg class="w-full h-full" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8" stroke-linecap="round" stroke-linejoin="round" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </button>
-      <button onclick="openCalendar()" aria-label="Calendario" class="relative w-6 h-6 text-[#161823] hover:text-[#FE2C55] transition">
-        <svg class="w-full h-full" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
-      </button>
-      <button onclick="openLiveStreamModal()" aria-label="Transmitir en vivo" class="relative w-6 h-6 text-[#161823] hover:text-[#FE2C55] transition">
-        <svg class="w-full h-full" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M23 7l-7 5 7 5V7z"/>
-          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-        </svg>
-      </button>
-      <button onclick="openMessages()" aria-label="Mensajes" class="relative w-6 h-6 text-[#161823] hover:text-[#FE2C55] transition">
-        <svg class="w-full h-full" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+  <!-- TOP BAR estilo Apple -->
+  <div class="flex items-center justify-between px-6 py-4 sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
+    <h1 id="app-name" class="text-2xl font-bold text-gray-900 tracking-tight">BeaBoo</h1>
+    <div class="flex items-center space-x-3">
+      <button onclick="openMessages()" aria-label="Mensajes" class="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+        <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        <span id="unread-messages-count" class="hidden absolute -top-2 -right-2 bg-[#FE2C55] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+        <span id="unread-messages-count" class="hidden absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">0</span>
       </button>
-      <button onclick="openNotifications()" aria-label="Notificaciones" class="relative w-6 h-6 text-[#161823] hover:text-[#FE2C55] transition">
-        <svg class="w-full h-full" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <button onclick="openNotifications()" aria-label="Notificaciones" class="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+        <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke-linecap="round" stroke-linejoin="round" />
           <path d="M13.73 21a2 2 0 01-3.46 0" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
@@ -1879,37 +2026,34 @@ setInterval(checkScheduledChapters, 60000);
     </div>
   </div>
 
-  <div class="flex-1 overflow-y-auto pb-20" id="scrollable-content">
-    <!-- Carrusel de historias de autores seguidos -->
-<section id="stories-carousel" class="overflow-x-auto" style="margin-top: 0; padding-top: 8px;">
-  <div class="flex space-x-4 px-4">
-    <div id="following-stories" class="flex space-x-4"></div>
-  </div>
-</section>
+  <div class="flex-1 overflow-y-auto pb-20 bg-gray-50" id="scrollable-content">
+    <!-- Hero Section estilo Apple -->
+    <section class="bg-white px-6 pt-8 pb-6">
+      <h1 class="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Discover</h1>
+      <p class="text-lg text-gray-500">Stories that inspire</p>
+    </section>
 
-<!-- Historias -->
-    <section class="stories-container" style="margin-top: 0;">
-        <div class="stories">
-            <div class="story add-story" id="add-story-btn">
-                <div class="image-container">
-                    <i class="fas fa-plus"></i>
-                </div>
-                <div class="username">Tu historia</div>
-            </div>
-            <div id="stories">
-                <!-- Las historias se cargarán aquí -->
-            </div>
+    <!-- Carrusel de historias estilo iOS -->
+    <section class="bg-white px-6 py-6 mb-2">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Following</h2>
+      <div class="flex space-x-4 overflow-x-auto scrollbar-hide pb-2">
+        <div id="following-stories" class="flex space-x-4"></div>
+        <div id="add-story-btn" class="flex-shrink-0 flex flex-col items-center cursor-pointer">
+          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
+            <i class="fas fa-plus text-white text-xl"></i>
+          </div>
+          <span class="text-xs text-gray-900 font-medium mt-2">Your Story</span>
         </div>
+      </div>
     </section>
     
-    <!-- SECCIONES DE CONTENIDO -->
-    <div class="p-6" style="padding-top: 0;">
-
-<section id="new-releases-section" class="mb-10">
+    <!-- New Releases estilo Apple -->
+    <section id="new-releases-section" class="bg-white px-6 py-6 mb-2">
       <div class="flex justify-between items-center mb-4">
-        <h2 id="new-releases-title" class="text-2xl font-bold text-[#FE2C55]">New Releases</h2>
+        <h2 id="new-releases-title" class="text-xl font-semibold text-gray-900">New Releases</h2>
+        <button class="text-sm text-blue-600 font-medium">See All</button>
       </div>
-      <div id="new-releases" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+      <div id="new-releases" class="grid grid-cols-2 gap-4"></div>
 </section>
 
 <script>
@@ -1927,7 +2071,6 @@ function loadFollowingStories() {
       firebase.database().ref('users/' + followedUserId).once('value').then(userSnap => {
         const userData = userSnap.val();
         
-        // 检查最近更新（最近24小时）
         firebase.database().ref('stories').orderByChild('userId').equalTo(followedUserId).once('value').then(storiesSnap => {
           let hasNewContent = false;
           let latestStoryId = null;
@@ -1942,26 +2085,22 @@ function loadFollowingStories() {
           });
 
           const storyDiv = document.createElement('div');
-          storyDiv.className = 'flex flex-col items-center cursor-pointer';
+          storyDiv.className = 'flex-shrink-0 flex flex-col items-center cursor-pointer';
           
           const imageContainer = document.createElement('div');
-          imageContainer.className = `w-16 h-16 rounded-full overflow-hidden ${hasNewContent ? 'border-2 border-[#FE2C55]' : 'border border-gray-300'}`;
-          
-          if (hasNewContent) {
-            imageContainer.classList.add('animate-pulse');
-          }
+          imageContainer.className = hasNewContent ? 'w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 p-0.5 shadow-md' : 'w-16 h-16 rounded-full bg-gray-200 p-0.5';
           
           imageContainer.innerHTML = `
             <img src="${userData.profileImage || 'https://via.placeholder.com/150'}" 
                  alt="${userData.username}" 
-                 class="w-full h-full object-cover"
+                 class="w-full h-full rounded-full object-cover border-2 border-white"
                  onclick="openLatestStory('${followedUserId}', '${latestStoryId}')">
           `;
           
           storyDiv.appendChild(imageContainer);
           
           const username = document.createElement('span');
-          username.className = 'text-xs mt-1 truncate w-16 text-center';
+          username.className = 'text-xs text-gray-900 font-medium mt-2 truncate w-16 text-center';
           username.textContent = userData.username;
           storyDiv.appendChild(username);
           
@@ -2010,70 +2149,96 @@ firebase.auth().onAuthStateChanged(user => {
 }
 </style>
 
-    <section id="top10-section" class="mb-10">
+    <section id="top10-section" class="bg-white px-6 py-6 mb-2">
       <div class="flex justify-between items-center mb-4">
-        <h2 id="top10-title" class="text-2xl font-bold text-[#FE2C55]">Top 10</h2>
+        <h2 id="top10-title" class="text-xl font-semibold text-gray-900">Top 10</h2>
+        <button class="text-sm text-blue-600 font-medium">See All</button>
       </div>
-      <div id="top10" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+      <div id="top10" class="grid grid-cols-2 gap-4"></div>
     </section>
 
-    <section id="popular-section" class="mb-10">
+    <section id="popular-section" class="bg-white px-6 py-6 mb-2">
       <div class="flex justify-between items-center mb-4">
-        <h2 id="popular-title" class="text-2xl font-bold text-[#FE2C55]">Most Popular</h2>
+        <h2 id="popular-title" class="text-xl font-semibold text-gray-900">Most Popular</h2>
+        <button class="text-sm text-blue-600 font-medium">See All</button>
       </div>
-      <div id="popular" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+      <div id="popular" class="grid grid-cols-2 gap-4"></div>
     </section>
 
-    <section id="terror-section" class="mb-10">
+    <section id="terror-section" class="bg-white px-6 py-6 mb-2">
       <div class="flex justify-between items-center mb-4">
-        <h2 id="terror-title" class="text-2xl font-bold text-[#FE2C55]">Featured Horror Stories</h2>
+        <h2 id="terror-title" class="text-xl font-semibold text-gray-900">Horror Stories</h2>
+        <button class="text-sm text-blue-600 font-medium">See All</button>
       </div>
-      <div id="terror-stories" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+      <div id="terror-stories" class="grid grid-cols-2 gap-4"></div>
     </section>
 
-    <section id="suggested-section" class="mb-10">
+    <section id="suggested-section" class="bg-white px-6 py-6 mb-2">
       <div class="flex justify-between items-center mb-4">
-        <h2 id="suggested-title" class="text-2xl font-bold" style="color: #FE2C55 !important;">Recommended for You</h2>
+        <h2 id="suggested-title" class="text-xl font-semibold text-gray-900">For You</h2>
+        <button class="text-sm text-blue-600 font-medium">See All</button>
       </div>
-      <div id="suggested-stories" class="flex space-x-4 overflow-x-auto"></div>
+      <div id="suggested-stories" class="flex space-x-4 overflow-x-auto scrollbar-hide pb-2"></div>
     </section>
 
-    <section id="featured-authors-section" class="mb-10">
+    <section id="featured-authors-section" class="bg-white px-6 py-6 mb-2">
       <div class="flex justify-between items-center mb-4">
-        <h2 id="featured-authors-title" class="text-2xl font-bold" style="color: #FE2C55 !important;">Featured Authors</h2>
+        <h2 id="featured-authors-title" class="text-xl font-semibold text-gray-900">Featured Authors</h2>
+        <button class="text-sm text-blue-600 font-medium">See All</button>
       </div>
-      <div id="featured-authors" class="flex space-x-auto overflow-x-auto"></div>
+      <div id="featured-authors" class="flex space-x-4 overflow-x-auto scrollbar-hide pb-2"></div>
     </section>
+    
+    <style>
+      #featured-authors .story-card img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      #featured-authors .story-card .rounded-2xl {
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+      }
+    </style>
     </div>
   </div>
 
-  <!-- BOTTOM NAVIGATION TIKTOK STYLE -->
-  <div id="bottom-nav" class="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white transition-transform duration-300">
-    <div class="grid grid-cols-4 gap-2 p-3">
-      <button onclick="openHome()" class="flex flex-col items-center text-[#161823] hover:text-[#FE2C55] transition">
+  <!-- BOTTOM NAVIGATION estilo iOS -->
+  <div id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 transition-transform duration-300">
+    <div class="grid grid-cols-5 gap-1 px-2 py-2 safe-area-inset-bottom">
+      <button onclick="openHome()" class="flex flex-col items-center py-2 text-gray-600 hover:text-blue-600 transition rounded-lg hover:bg-gray-50">
         <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10 2L2 8v10a1 1 0 001 1h5v-5h4v5h5a1 1 0 001-1V8l-8-6z" />
         </svg>
-        <span class="text-xs">Home</span>
+        <span class="text-[10px] font-medium">Home</span>
       </button>
-      <button onclick="openCommunity()" class="flex flex-col items-center text-[#161823] hover:text-[#FE2C55] transition">
+      <button onclick="openSearch()" class="flex flex-col items-center py-2 text-gray-600 hover:text-blue-600 transition rounded-lg hover:bg-gray-50">
+        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8" stroke-linecap="round" stroke-linejoin="round" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="text-[10px] font-medium">Search</span>
+      </button>
+      <button onclick="openCommunity()" class="flex flex-col items-center py-2 text-gray-600 hover:text-blue-600 transition rounded-lg hover:bg-gray-50">
         <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20">
           <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
           <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
         </svg>
-        <span class="text-xs">Community</span>
+        <span class="text-[10px] font-medium">Community</span>
       </button>
-      <button onclick="openCreatorHub()" class="flex flex-col items-center text-[#161823] hover:text-[#FE2C55] transition">
+      <button onclick="openCreatorHub()" class="flex flex-col items-center py-2 text-gray-600 hover:text-blue-600 transition rounded-lg hover:bg-gray-50">
         <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
-        <span class="text-xs">Create</span>
+        <span class="text-[10px] font-medium">Create</span>
       </button>
-      <button onclick="openProfile()" class="flex flex-col items-center text-[#161823] hover:text-[#FE2C55] transition">
+      <button onclick="openProfile()" class="flex flex-col items-center py-2 text-gray-600 hover:text-blue-600 transition rounded-lg hover:bg-gray-50">
         <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 10a4 4 0 100-8 4 4 0 000 8zM2 18a8 8 0 1116 0H2z" clip-rule="evenodd" />
         </svg>
-        <span class="text-xs">Profile</span>
+        <span class="text-[10px] font-medium">Profile</span>
       </button>
     </div>
   </div>
@@ -2102,30 +2267,28 @@ firebase.auth().onAuthStateChanged(user => {
 
 
 
-<!-- VISTA CREATOR HUB (NUEVA SECCIÓN DE CREACIÓN) -->
-<div id="creator-hub-view" class="fixed inset-0 bg-gradient-to-b from-white to-gray-50 text-black overflow-y-auto hidden z-50">
-  <div class="p-4">
-    <!-- Botón Volver -->
-    <button onclick="closeCreatorHub()" class="text-[#FE2C55] mb-4 flex items-center hover:scale-105 transition-transform">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <polyline points="15 18 9 12 15 6" />
-      </svg>
-      <span>Back</span>
-    </button>
-
-    <!-- Header -->
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-[#FE2C55] mb-2">创作者中心</h1>
-      <p class="text-gray-600">创作精彩内容，与社区分享</p>
+<!-- VISTA CREATOR HUB estilo Apple -->
+<div id="creator-hub-view" class="fixed inset-0 bg-gray-50 text-black overflow-y-auto hidden z-50">
+  <div class="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-gray-100">
+    <div class="flex items-center px-6 py-4">
+      <button onclick="closeCreatorHub()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition mr-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+      <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Create</h1>
     </div>
+  </div>
+  
+  <div class="px-6 py-6">
 
 
     <!-- Grid de opciones de creación -->
-    <div class="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
+    <div class="grid grid-cols-1 gap-4">
       
       <!-- Crear Historia -->
       <div onclick="openStoryCreation()" class="group cursor-pointer">
-        <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-[#FE2C55]">
+        <div class="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
           <div class="flex items-center">
             <div class="w-16 h-16 mr-4 bg-gradient-to-br from-[#FE2C55] to-[#ff6b7a] rounded-full flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2196,17 +2359,17 @@ firebase.auth().onAuthStateChanged(user => {
     </div>
 
     <!-- Sección de estadísticas del creador -->
-    <div class="mt-12 bg-gradient-to-r from-[#FE2C55] to-[#ff6b7a] rounded-2xl p-6 text-white max-w-2xl mx-auto">
+    <div class="mt-6 bg-white rounded-2xl p-6 shadow-sm">
       <div class="text-center">
-        <h3 class="text-xl font-bold mb-4">💡 Estadísticas del Creador</h3>
+        <h3 class="text-lg font-semibold mb-4 text-gray-900">Your Stats</h3>
         <div class="grid grid-cols-2 gap-4">
           <div class="text-center">
-            <div class="text-2xl font-bold mb-1" id="creator-stories-count">0</div>
-            <div class="text-sm opacity-90">Historias creadas</div>
+            <div class="text-2xl font-bold mb-1 text-gray-900" id="creator-stories-count">0</div>
+            <div class="text-sm text-gray-500">Stories</div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-bold mb-1" id="creator-notes-count">0</div>
-            <div class="text-sm opacity-90">Notas publicadas</div>
+            <div class="text-2xl font-bold mb-1 text-gray-900" id="creator-notes-count">0</div>
+            <div class="text-sm text-gray-500">Notes</div>
           </div>
         </div>
       </div>
@@ -2214,30 +2377,30 @@ firebase.auth().onAuthStateChanged(user => {
   </div>
 </div>
 
-<!-- Community View -->
-<div id="community-view" class="fixed inset-0 bg-white text-black overflow-y-auto hidden z-50">
-  <div class="p-4">
-    <!-- Back Button -->
-    <button onclick="closeCommunity()" class="text-[#FE2C55] mb-4 flex items-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <polyline points="15 18 9 12 15 6" />
-      </svg>
-      <span>Back</span>
-    </button>
+<!-- Community View estilo Apple -->
+<div id="community-view" class="fixed inset-0 bg-gray-50 text-black overflow-y-auto hidden z-50">
+  <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xl">
+    <div class="flex items-center justify-between px-6 py-4">
+      <button onclick="closeCommunity()" class="text-blue-600 font-medium">Back</button>
+      <h1 class="text-lg font-semibold text-gray-900">Community</h1>
+      <button onclick="openNoteCreation()" class="text-blue-600 font-medium">New</button>
+    </div>
 
-    <!-- Navigation Tabs -->
-    <div class="flex border-b border-gray-200 mb-4">
-      <button onclick="switchCommunityTab('feed')" class="flex-1 py-2 text-center text-[#FE2C55] border-b-2 border-[#FE2C55]" id="feed-tab">
+    <!-- Navigation Tabs estilo iOS -->
+    <div class="flex space-x-2 px-6 pb-3">
+      <button onclick="switchCommunityTab('feed')" class="community-tab flex-1 py-2 text-center text-white bg-gray-900 rounded-xl font-semibold" id="feed-tab">
         Feed
       </button>
-      <button onclick="switchCommunityTab('photos'); loadPhotos();" class="flex-1 py-2 text-center text-gray-500" id="photos-tab">
+      <button onclick="switchCommunityTab('photos'); loadPhotos();" class="community-tab flex-1 py-2 text-center text-gray-900 bg-gray-100 rounded-xl font-semibold" id="photos-tab">
         Photos
       </button>
     </div>
-    
+  </div>
+  
+  <div class="px-6 py-4">
     <!-- Photos Section -->
     <div id="photos-feed" class="hidden">
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid grid-cols-3 gap-1">
         <!-- Photos will be loaded dynamically here -->
       </div>
     </div>
@@ -2248,98 +2411,404 @@ firebase.auth().onAuthStateChanged(user => {
     </div>
 
     <!-- Add Note Form -->
-    <div id="add-note-form" class="hidden">
-      <textarea id="note-content" placeholder="What would you like to share? (200 characters max)" maxlength="200" class="w-full p-4 border border-gray-200 rounded-xl resize-none h-32 focus:outline-none focus:ring-2 focus:ring-[#FE2C55]"></textarea>
-<div id="char-counter" class="text-sm text-gray-500 mt-2">200 characters remaining</div>
-<script>
-document.getElementById('note-content').addEventListener('input', function() {
-  const remaining = 200 - this.value.length;
-  document.getElementById('char-counter').textContent = remaining + ' characters remaining';
-  if (remaining <= 20) {
-    document.getElementById('char-counter').classList.add('text-[#FE2C55]');
-  } else {
-    document.getElementById('char-counter').classList.remove('text-[#FE2C55]');
-  }
-});
-</script>
-      <div class="mt-4 flex items-center space-x-4">
-        <label class="flex-1 cursor-pointer bg-gray-100 p-3 rounded-xl hover:bg-gray-200 transition text-center">
+    <div id="add-note-form" class="hidden bg-white rounded-2xl p-6 shadow-sm mb-4">
+      <textarea id="note-content" placeholder="Share your thoughts..." maxlength="200" class="w-full p-4 bg-gray-50 border-none rounded-xl resize-none h-32 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"></textarea>
+      <div id="char-counter" class="text-xs text-gray-400 mt-2">200 characters max</div>
+      <div class="mt-4 flex items-center space-x-3">
+        <label class="flex-1 cursor-pointer bg-gray-100 p-3 rounded-xl hover:bg-gray-200 active:scale-[0.98] transition text-center font-medium">
           <input type="file" id="note-image" accept="image/*" class="hidden" onchange="handleNoteImagePreview(event)">
-          <i class="fas fa-camera mr-2"></i>Add Photo
+          <i class="fas fa-camera mr-2"></i>Photo
         </label>
-        <button onclick="publishNote()" class="flex-1 bg-[#FE2C55] text-white p-3 rounded-xl font-medium">
+        <button onclick="publishNote()" class="flex-1 bg-blue-600 text-white p-3 rounded-xl font-semibold hover:bg-blue-700 active:scale-[0.98] transition">
           Post
         </button>
       </div>
       <div id="image-preview" class="mt-4 hidden">
-        <img id="preview-img" class="max-h-40 rounded-lg mx-auto">
-        <button onclick="removeImage()" class="mt-2 text-red-500 text-sm">
-          <i class="fas fa-times mr-1"></i>Remove Photo
+        <img id="preview-img" class="w-full h-48 object-cover rounded-xl">
+        <button onclick="removeImage()" class="mt-2 text-red-500 text-sm font-medium hover:text-red-600">
+          <i class="fas fa-times mr-1"></i>Remove
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Search View - TikTok Style -->
-<div id="search-view" class="fixed inset-0 bg-white text-black overflow-y-auto hidden z-50">
-  <div class="p-4">
+<script>
+function switchCommunityTab(tab) {
+  const feedTab = document.getElementById('feed-tab');
+  const photosTab = document.getElementById('photos-tab');
+  const feedContent = document.getElementById('notes-feed');
+  const photosContent = document.getElementById('photos-feed');
+  
+  document.querySelectorAll('.community-tab').forEach(btn => {
+    btn.classList.remove('bg-gray-900', 'text-white');
+    btn.classList.add('bg-gray-100', 'text-gray-900');
+  });
+  
+  if (tab === 'feed') {
+    feedTab.classList.add('bg-gray-900', 'text-white');
+    feedTab.classList.remove('bg-gray-100', 'text-gray-900');
+    feedContent.classList.remove('hidden');
+    photosContent.classList.add('hidden');
+  } else {
+    photosTab.classList.add('bg-gray-900', 'text-white');
+    photosTab.classList.remove('bg-gray-100', 'text-gray-900');
+    photosContent.classList.remove('hidden');
+    feedContent.classList.add('hidden');
+  }
+}
 
-    <!-- Back Button -->
-    <button onclick="closeSearch()" class="text-gray-800 mb-4 flex items-center font-medium hover:text-[#FE2C55] transition">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <polyline points="15 18 9 12 15 6" />
-      </svg>
-      <span id="btn-volver-search">Back</span>
-    </button>
+document.getElementById('note-content')?.addEventListener('input', function() {
+  const remaining = 200 - this.value.length;
+  const counter = document.getElementById('char-counter');
+  if (counter) {
+    counter.textContent = remaining + ' characters remaining';
+    if (remaining <= 20) {
+      counter.classList.add('text-red-500');
+      counter.classList.remove('text-gray-500');
+    } else {
+      counter.classList.remove('text-red-500');
+      counter.classList.add('text-gray-500');
+    }
+  }
+});
+</script>
 
-    <!-- Search Bar and Category Filter -->
-    <div class="space-y-4 mb-6">
-      <div class="relative">
-        <input id="search-input" type="text" placeholder="Search for stories or authors" class="w-full pl-12 pr-4 py-3 rounded-full bg-gray-100 text-black border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#FE2C55] focus:border-transparent text-base">
-        <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
+<!-- Search View estilo Apple -->
+<div id="search-view" class="fixed inset-0 bg-gray-50 text-black overflow-y-auto hidden z-50">
+  <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xl">
+    <div class="px-6 py-3">
+      <div class="flex items-center space-x-3">
+        <button onclick="closeSearch()" class="text-blue-600 font-medium">Cancel</button>
+        <div class="flex-1 relative">
+          <input id="search-input" type="text" placeholder="Search" class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-gray-100 text-black border-none focus:outline-none text-base" autofocus>
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <button id="clear-search" class="hidden absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-gray-400 rounded-full flex items-center justify-center hover:bg-gray-500 transition" onclick="clearSearchInput()">
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
       </div>
-      <select id="category-filter" class="w-full p-3 rounded-full bg-gray-100 text-black border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#FE2C55]">
-        <option value="">All Categories</option>
-        <option value="aventura">Adventure</option>
-        <option value="romance">Romance</option>
-        <option value="misterio">Mystery</option>
-        <option value="fantasia">Fantasy</option>
-        <option value="terror">Horror</option>
-      </select>
     </div>
+    
+    <!-- Búsquedas recientes y sugerencias -->
+    <div id="search-suggestions" class="px-6 pb-3">
+      <div class="mb-3">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-semibold text-gray-900">Recent Searches</h3>
+          <button onclick="clearRecentSearches()" class="text-xs text-blue-600 font-medium">Clear</button>
+        </div>
+        <div id="recent-searches" class="flex flex-wrap gap-2">
+          <!-- Recent searches will appear here -->
+        </div>
+      </div>
+      
+      <div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-2">Trending</h3>
+        <div id="trending-searches" class="flex flex-wrap gap-2">
+          <button onclick="searchTrending('Romance')" class="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-medium rounded-full">Romance</button>
+          <button onclick="searchTrending('Fantasy')" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-medium rounded-full">Fantasy</button>
+          <button onclick="searchTrending('Mystery')" class="px-3 py-1.5 bg-gradient-to-r from-gray-700 to-gray-900 text-white text-xs font-medium rounded-full">Mystery</button>
+          <button onclick="searchTrending('Horror')" class="px-3 py-1.5 bg-gradient-to-r from-red-600 to-orange-600 text-white text-xs font-medium rounded-full">Horror</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Chips de categorías -->
+    <div id="category-filters" class="hidden px-6 pb-3 overflow-x-auto scrollbar-hide">
+      <div class="flex space-x-2">
+        <button onclick="filterCategory('')" class="category-chip active px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-medium whitespace-nowrap">All</button>
+        <button onclick="filterCategory('aventura')" class="category-chip px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium whitespace-nowrap hover:bg-gray-200 transition">Adventure</button>
+        <button onclick="filterCategory('romance')" class="category-chip px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium whitespace-nowrap hover:bg-gray-200 transition">Romance</button>
+        <button onclick="filterCategory('misterio')" class="category-chip px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium whitespace-nowrap hover:bg-gray-200 transition">Mystery</button>
+        <button onclick="filterCategory('fantasia')" class="category-chip px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium whitespace-nowrap hover:bg-gray-200 transition">Fantasy</button>
+        <button onclick="filterCategory('terror')" class="category-chip px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium whitespace-nowrap hover:bg-gray-200 transition">Horror</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="px-6 py-4">
 
-    <!-- Search Results -->
-    <h2 id="search-results-title" class="text-xl font-bold mb-4 text-black">Search Results</h2>
-    <div class="flex justify-around border-b border-gray-200 mb-4">
-      <button data-tab="books" class="tab-button py-2 w-1/2 text-center font-medium text-gray-500 hover:text-[#FE2C55] active">
-        Stories
-      </button>
-      <button data-tab="authors" class="tab-button py-2 w-1/2 text-center font-medium text-gray-500 hover:text-[#FE2C55]">
-        Authors
-      </button>
+    <!-- Loading animation -->
+    <div id="search-loading" class="hidden text-center py-16">
+      <div class="inline-block w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+      <p class="text-sm text-gray-500 mt-4">Searching...</p>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="flex space-x-2 mb-4">
+      <button data-tab="books" class="search-tab-button flex-1 py-2 text-center font-semibold text-white bg-gray-900 rounded-xl">Stories</button>
+      <button data-tab="authors" class="search-tab-button flex-1 py-2 text-center font-semibold text-gray-900 bg-gray-100 rounded-xl">Authors</button>
     </div>
 
     <!-- Stories Section -->
     <div id="books-section" class="block">
-      <h3 id="search-books-title" class="text-base font-semibold mb-3 text-[#FE2C55]">Stories</h3>
-      <div id="search-books-carousel" class="flex space-x-3 overflow-x-auto mb-6 p-1 scrollbar-hide">
+      <div id="search-books-carousel" class="grid grid-cols-2 gap-4">
         <!-- Stories will be loaded from Firebase here -->
+      </div>
+      <div id="no-stories-found" class="hidden text-center py-8">
+        <p class="text-gray-500">No stories found</p>
       </div>
     </div>
 
     <!-- Authors Section -->
     <div id="authors-section" class="hidden">
-      <h3 id="search-authors-title" class="text-base font-semibold mb-3 text-[#FE2C55]">Authors</h3>
       <div id="search-authors-list" class="space-y-3">
         <!-- Authors will be loaded from Firebase here -->
+      </div>
+      <div id="no-authors-found" class="hidden text-center py-8">
+        <p class="text-gray-500">No authors found</p>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+function filterCategory(category) {
+  document.querySelectorAll('.category-chip').forEach(chip => {
+    chip.classList.remove('active', 'bg-gray-900', 'text-white');
+    chip.classList.add('bg-gray-100', 'text-gray-900');
+  });
+  event.target.classList.add('active', 'bg-gray-900', 'text-white');
+  event.target.classList.remove('bg-gray-100', 'text-gray-900');
+  document.getElementById('category-filter').value = category;
+}
+
+document.querySelectorAll('.search-tab-button').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.search-tab-button').forEach(btn => {
+      btn.classList.remove('bg-gray-900', 'text-white');
+      btn.classList.add('bg-gray-100', 'text-gray-900');
+    });
+    button.classList.add('bg-gray-900', 'text-white');
+    button.classList.remove('bg-gray-100', 'text-gray-900');
+    
+    const tab = button.getAttribute('data-tab');
+    if (tab === 'books') {
+      document.getElementById('books-section').classList.remove('hidden');
+      document.getElementById('authors-section').classList.add('hidden');
+    } else {
+      document.getElementById('authors-section').classList.remove('hidden');
+      document.getElementById('books-section').classList.add('hidden');
+    }
+  });
+});
+
+// Función de búsqueda en tiempo real
+let searchTimeout;
+const searchInput = document.getElementById('search-input');
+
+searchInput?.addEventListener('focus', function() {
+  if (!this.value.trim()) {
+    document.getElementById('search-suggestions')?.classList.remove('hidden');
+    document.getElementById('category-filters')?.classList.add('hidden');
+  }
+});
+
+searchInput?.addEventListener('input', function(e) {
+  const query = e.target.value.trim().toLowerCase();
+  const clearBtn = document.getElementById('clear-search');
+  
+  // Mostrar/ocultar botón X
+  if (this.value.length > 0) {
+    clearBtn?.classList.remove('hidden');
+  } else {
+    clearBtn?.classList.add('hidden');
+  }
+  
+  clearTimeout(searchTimeout);
+  
+  if (query.length === 0) {
+    document.getElementById('search-suggestions')?.classList.remove('hidden');
+    document.getElementById('category-filters')?.classList.add('hidden');
+    document.getElementById('search-books-carousel').innerHTML = '';
+    document.getElementById('search-authors-list').innerHTML = '';
+    return;
+  }
+  
+  if (query.length < 2) {
+    document.getElementById('search-suggestions')?.classList.add('hidden');
+    document.getElementById('category-filters')?.classList.remove('hidden');
+    return;
+  }
+  
+  document.getElementById('search-suggestions')?.classList.add('hidden');
+  document.getElementById('category-filters')?.classList.remove('hidden');
+  document.getElementById('search-loading')?.classList.remove('hidden');
+  
+  searchTimeout = setTimeout(() => {
+    performSearch(query);
+    saveRecentSearch(query);
+  }, 500);
+});
+
+// Guardar búsquedas recientes
+function saveRecentSearch(query) {
+  let recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+  recent = recent.filter(q => q.toLowerCase() !== query.toLowerCase());
+  recent.unshift(query);
+  recent = recent.slice(0, 5);
+  localStorage.setItem('recentSearches', JSON.stringify(recent));
+  loadRecentSearches();
+}
+
+// Cargar búsquedas recientes
+function loadRecentSearches() {
+  const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+  const container = document.getElementById('recent-searches');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  recent.forEach(query => {
+    const chip = document.createElement('button');
+    chip.className = 'px-3 py-1.5 bg-gray-100 text-gray-900 text-xs font-medium rounded-full hover:bg-gray-200 transition flex items-center space-x-1';
+    chip.innerHTML = `
+      <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span>${query}</span>
+    `;
+    chip.onclick = () => {
+      document.getElementById('search-input').value = query;
+      performSearch(query);
+    };
+    container.appendChild(chip);
+  });
+}
+
+// Limpiar búsquedas recientes
+function clearRecentSearches() {
+  localStorage.removeItem('recentSearches');
+  document.getElementById('recent-searches').innerHTML = '';
+}
+
+// Búsqueda trending
+function searchTrending(term) {
+  document.getElementById('search-input').value = term;
+  performSearch(term.toLowerCase());
+  saveRecentSearch(term);
+}
+
+// Limpiar input de búsqueda
+function clearSearchInput() {
+  const input = document.getElementById('search-input');
+  input.value = '';
+  document.getElementById('clear-search')?.classList.add('hidden');
+  document.getElementById('search-suggestions')?.classList.remove('hidden');
+  document.getElementById('category-filters')?.classList.add('hidden');
+  document.getElementById('search-books-carousel').innerHTML = '';
+  document.getElementById('search-authors-list').innerHTML = '';
+  input.focus();
+}
+
+// Cargar búsquedas recientes al abrir
+if (document.getElementById('search-view')) {
+  loadRecentSearches();
+}
+
+async function performSearch(query) {
+  try {
+    document.getElementById('search-suggestions')?.classList.add('hidden');
+    document.getElementById('category-filters')?.classList.remove('hidden');
+    
+    // Buscar historias
+    const storiesRef = firebase.database().ref('stories');
+    const storiesSnapshot = await storiesRef.once('value');
+    const storiesContainer = document.getElementById('search-books-carousel');
+    const noStoriesFound = document.getElementById('no-stories-found');
+    storiesContainer.innerHTML = '';
+    
+    let storiesFound = 0;
+    storiesSnapshot.forEach(child => {
+      const story = child.val();
+      const title = (story.title || '').toLowerCase();
+      const author = (story.username || story.email || '').toLowerCase();
+      const category = (story.category || '').toLowerCase();
+      
+      if (title.includes(query) || author.includes(query) || category.includes(query)) {
+        storiesFound++;
+        const storyCard = document.createElement('div');
+        storyCard.className = 'bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer animate-fade-in';
+        storyCard.style.animationDelay = `${storiesFound * 50}ms`;
+        storyCard.onclick = () => openStoryDetail(story);
+        storyCard.innerHTML = `
+          <img src="${story.coverImage || '/api/placeholder/200/300'}" class="w-full aspect-[2/3] object-cover">
+          <div class="p-3">
+            <h3 class="font-semibold text-sm text-gray-900 truncate">${story.title}</h3>
+            <p class="text-xs text-gray-500 truncate">${story.username || 'Unknown'}</p>
+          </div>
+        `;
+        storiesContainer.appendChild(storyCard);
+      }
+    });
+    
+    noStoriesFound.classList.toggle('hidden', storiesFound > 0);
+    
+    // Buscar autores
+    const usersRef = firebase.database().ref('users');
+    const usersSnapshot = await usersRef.once('value');
+    const authorsContainer = document.getElementById('search-authors-list');
+    const noAuthorsFound = document.getElementById('no-authors-found');
+    authorsContainer.innerHTML = '';
+    
+    let authorsFound = 0;
+    usersSnapshot.forEach(child => {
+      const user = child.val();
+      const username = (user.username || '').toLowerCase();
+      const email = (user.email || '').toLowerCase();
+      
+      if (username.includes(query) || email.includes(query)) {
+        authorsFound++;
+        const authorCard = document.createElement('div');
+        authorCard.className = 'bg-white rounded-xl p-4 flex items-center space-x-3 shadow-sm hover:shadow-md transition cursor-pointer';
+        authorCard.onclick = () => openAuthorProfile(child.key);
+        authorCard.innerHTML = `
+          <img src="${user.profileImage || 'https://via.placeholder.com/150'}" class="w-12 h-12 rounded-full object-cover">
+          <div class="flex-1">
+            <h3 class="font-semibold text-gray-900">${user.username || 'Unknown'}</h3>
+            <p class="text-sm text-gray-500">${user.email || ''}</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        `;
+        authorsContainer.appendChild(authorCard);
+      }
+    });
+    
+    noAuthorsFound.classList.toggle('hidden', authorsFound > 0);
+    
+  } catch (error) {
+    console.error('Search error:', error);
+  } finally {
+    document.getElementById('search-loading')?.classList.add('hidden');
+  }
+}
+
+// Animación fade-in para resultados
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+    opacity: 0;
+  }
+`;
+document.head.appendChild(style);
+</script>
 
 <script>
   // Script para cambiar entre tabs
@@ -2489,36 +2958,39 @@ document.getElementById('note-content').addEventListener('input', function() {
   });
 </script>
 <!-- PERFIL PROPIO CON SUBIDA DE FOTO EN TIEMPO REAL -->
-<div id="profile-view" class="fixed inset-0 overflow-y-auto z-40 hidden bg-white text-black scrollbar-hide">
+<div id="profile-view" class="fixed inset-0 overflow-y-auto z-40 hidden bg-gray-50 text-black scrollbar-hide">
   <!-- Vista móvil -->
-  <div class="block lg:hidden p-4 max-w-md mx-auto">
+  <div class="block lg:hidden">
     <!-- Header con botón volver y botones de acción -->
-    <div class="flex justify-between items-center mb-4">
-      <button onclick="openHome()" class="text-[#FE2C55] font-medium flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <div class="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 py-4">
+      <div class="flex justify-between items-center">
+      <button onclick="openHome()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <polyline points="15 18 9 12 15 6" />
         </svg>
-        <span id="btn-volver-profile">Volver</span>
       </button>
+      
+      <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Profile</h1>
       
       <!-- Botones de acción en la esquina superior derecha -->
       <div class="flex items-center space-x-2">
-        <!-- Botón de crear historia -->
-        <button onclick="openStoryCreation()" class="text-[#FE2C55] p-2 hover:bg-gray-100 rounded-full transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button onclick="openStoryCreation()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
         </button>
         
-        <!-- Botón de ajustes -->
-        <button onclick="openProfileEdit()" class="text-[#FE2C55] p-2 hover:bg-gray-100 rounded-full transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button onclick="openProfileEdit()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </button>
       </div>
+      </div>
     </div>
+    
+    <div class="px-6 py-6">
 
     <div class="flex flex-col items-center">
       <!-- Imagen de perfil centrada -->
@@ -2564,7 +3036,7 @@ document.getElementById('note-content').addEventListener('input', function() {
       </div>
 
       <!-- Botón BeaBoo Studio -->
-      <button onclick="openBeabooStudio()" class="w-full bg-[#FE2C55] text-white p-3 rounded-lg flex items-center justify-center mb-4">
+      <button onclick="openBeabooStudio()" class="w-full bg-blue-600 text-white p-3 rounded-xl font-semibold hover:bg-blue-700 active:scale-[0.98] transition flex items-center justify-center mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
         </svg>
@@ -2572,11 +3044,11 @@ document.getElementById('note-content').addEventListener('input', function() {
       </button>
 
       <!-- Historias del usuario -->
-      <hr class="border-t border-gray-300 w-full my-4">
       <div class="mt-6 w-full">
-        <h3 id="profile-stories-title" class="text-lg font-bold mb-2 text-[#FE2C55]">0 Historias</h3>
+        <h3 id="profile-stories-title" class="text-lg font-semibold mb-4 text-gray-900">0 Stories</h3>
         <div id="user-stories" class="grid grid-cols-2 gap-4"></div>
       </div>
+    </div>
     </div>
   </div>
 
@@ -3263,35 +3735,31 @@ async function handleProfileImageUploadDesktop(event) {
   }
 </script>
 
-<!-- MODAL DE PERFIL DEL AUTOR -->
-<div id="author-profile-modal" class="fixed inset-0 overflow-y-auto z-50 hidden bg-gradient-to-b from-white to-[#f9f9f9] text-black">
-  <div class="p-4 relative">
-    <!-- Botón de volver -->
-    <button onclick="closeAuthorProfile()" class="text-[#FE2C55] mb-4 flex items-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <polyline points="15 18 9 12 15 6" />
-      </svg>
-      <span id="btn-volver-author">Volver</span>
-    </button>
-    <!-- Botón de opciones (3 puntos) -->
-    <button id="options-button" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.75a.75.75 0 100-1.5.75.75 0 000 1.5zM12 13.25a.75.75 0 100-1.5.75.75 0 000 1.5zM12 19.75a.75.75 0 100-1.5.75.75 0 000 1.5z" />
-      </svg>
-    </button>
-    <!-- Menú de opciones -->
-    <div id="options-menu" class="absolute top-12 right-4 bg-white border border-gray-300 rounded-lg shadow-lg hidden">
-      <ul class="divide-y">
-        <li><button onclick="window.location.href='report.html'" class="w-full text-left px-4 py-2 hover:bg-gray-100">Reportar</button></li>
-      </ul>
+<!-- MODAL DE PERFIL DEL AUTOR estilo Apple -->
+<div id="author-profile-modal" class="fixed inset-0 overflow-y-auto z-50 hidden bg-gray-50 text-black">
+  <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xl">
+    <div class="flex items-center justify-between px-6 py-4">
+      <button onclick="closeAuthorProfile()" class="text-blue-600 font-medium">Back</button>
+      <h1 class="text-lg font-semibold text-gray-900">Profile</h1>
+      <button id="options-button" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.75a.75.75 0 100-1.5.75.75 0 000 1.5zM12 13.25a.75.75 0 100-1.5.75.75 0 000 1.5zM12 19.75a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+        </svg>
+      </button>
     </div>
+    <!-- Menú de opciones -->
+    <div id="options-menu" class="absolute top-16 right-4 bg-white rounded-2xl shadow-xl hidden z-20 overflow-hidden">
+      <button onclick="window.location.href='report.html'" class="w-full text-left px-6 py-4 hover:bg-gray-50 text-sm font-medium text-red-600">Report User</button>
+    </div>
+  </div>
 
-    <div class="flex flex-col items-center mt-4" id="author-profile-content">
+  <div class="px-6 py-8">
+    <div class="flex flex-col items-center" id="author-profile-content">
       <!-- Foto del autor -->
-      <div id="author-profile-img-container" class="relative">
+      <div id="author-profile-img-container" class="relative mb-6">
         <!-- Marco animado del autor -->
         <div id="author-profile-frame" class="absolute inset-0 rounded-full pointer-events-none z-10" style="display: none;"></div>
-        <img id="author-profile-image" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full object-cover border-2 border-[#FE2C55]" alt="Foto del autor">
+        <img id="author-profile-image" src="https://via.placeholder.com/150" class="w-32 h-32 rounded-full object-cover shadow-xl" alt="Foto del autor">
         <!-- Note bubble -->
         <div id="profile-note" class="hidden absolute -top-16 left-1/2 transform -translate-x-1/2 bg-white p-3 rounded-lg shadow-lg w-48 text-center animate-float">
           <p id="note-text" class="text-sm"></p>
@@ -3357,71 +3825,94 @@ function saveNote() {
 }
 </script>
       <!-- Nombre de usuario -->
-      <h2 id="author-profile-name" class="text-xl font-bold mt-2 text-black"></h2>
+      <h2 id="author-profile-name" class="text-3xl font-bold text-gray-900 mb-2"></h2>
       <!-- Biografía y sitio web -->
-      <div id="author-bio" class="text-center text-gray-600 mt-2 max-w-md"></div>
+      <div id="author-bio" class="text-center text-gray-500 mt-2 max-w-sm text-base leading-relaxed"></div>
       <!-- Redes sociales -->
       <div id="author-social-links" class="flex space-x-4 mt-4"></div>
 
       <!-- Estadísticas encima de botones -->
-      <div class="flex space-x-8 mt-6">
-        <button onclick="openFollowingModal()" class="text-center focus:outline-none hover:opacity-70 transition-opacity">
-          <span id="author-following" class="font-bold text-black">0</span>
-          <p class="text-sm text-[#FE2C55]">Siguiendo</p>
-        </button>
-        <button onclick="openFollowersModal()" class="text-center focus:outline-none hover:opacity-70 transition-opacity">
-          <span id="author-followers" class="font-bold text-black">0</span>
-          <p class="text-sm text-[#FE2C55]">Seguidores</p>
-        </button>
+      <div class="bg-white rounded-2xl p-6 w-full mt-6 shadow-sm">
+        <div class="flex justify-around">
+          <button onclick="openFollowingModal()" class="text-center focus:outline-none hover:opacity-70 transition-opacity">
+            <span id="author-following" class="text-3xl font-bold text-gray-900 block">0</span>
+            <p class="text-xs text-gray-500 mt-2 font-medium">Following</p>
+          </button>
+          <div class="w-px bg-gray-200"></div>
+          <button onclick="openFollowersModal()" class="text-center focus:outline-none hover:opacity-70 transition-opacity">
+            <span id="author-followers" class="text-3xl font-bold text-gray-900 block">0</span>
+            <p class="text-xs text-gray-500 mt-2 font-medium">Followers</p>
+          </button>
+        </div>
       </div>
 
       <!-- Botones de acción: Seguir, Bloquear y Reportar -->
-      <div class="flex items-center justify-center w-full mt-4 space-x-2">
-        <button id="follow-button" onclick="followAuthor()" class="bg-[#FE2C55] text-white px-4 py-2 rounded-lg hover:bg-red-600" title="Seguir/Dejar de seguir">
-          <span id="follow-button-text">Seguir</span>
+      <div class="w-full mt-6 space-y-3">
+        <button id="follow-button" onclick="followAuthor()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-semibold hover:bg-blue-700 active:scale-[0.98] transition shadow-sm" title="Seguir/Dejar de seguir">
+          <span id="follow-button-text">Follow</span>
         </button>
-        <button id="block-button" onclick="blockAuthor()" class="bg-[#f9f9f9] text-[#FE2C55] px-4 py-2 rounded-lg border border-[#FE2C55] hover:bg-gray-100" title="Bloquear/Desbloquear">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-          </svg>
-          Bloquear
-        </button>
-        <button id="report-button" onclick="window.location.href='report.html'" class="flex items-center bg-[#f9f9f9] text-[#FE2C55] px-4 py-2 rounded-lg border border-[#FE2C55] hover:bg-gray-100" title="Reportar">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          Reportar
-        </button>
+        <div class="flex space-x-3">
+          <button id="block-button" onclick="blockAuthor()" class="flex-1 bg-gray-100 text-gray-900 py-3 rounded-xl font-medium hover:bg-gray-200 active:scale-[0.98] transition" title="Bloquear/Desbloquear">
+            <span id="block-button-text">Block</span>
+          </button>
+          <button id="report-button" onclick="window.location.href='report.html'" class="flex-1 bg-gray-100 text-red-600 py-3 rounded-xl font-medium hover:bg-gray-200 active:scale-[0.98] transition" title="Reportar">
+            Report
+          </button>
+        </div>
       </div>
 
-      <hr class="border-t border-gray-300 w-full my-4">
+      <!-- Sección de insignias/logros -->
+      <div class="mt-6 w-full">
+        <h3 class="text-sm font-semibold text-gray-500 mb-3">ACHIEVEMENTS</h3>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="grid grid-cols-4 gap-3">
+            <div class="text-center">
+              <div class="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+              </div>
+              <p class="text-xs text-gray-600 font-medium">Top Writer</p>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                </svg>
+              </div>
+              <p class="text-xs text-gray-600 font-medium">1K Followers</p>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <p class="text-xs text-gray-600 font-medium">Verified</p>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+                </svg>
+              </div>
+              <p class="text-xs text-gray-600 font-medium">Streamer</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Historias del autor -->
-      <div class="mt-4 w-full">
-        <h3 id="author-stories-title" class="text-lg font-bold mb-2 text-[#FE2C55]">Historias del autor</h3>
+      <div class="mt-8 w-full">
+        <div class="flex justify-between items-center mb-4">
+          <h3 id="author-stories-title" class="text-xl font-bold text-gray-900">Stories</h3>
+          <button class="text-sm text-blue-600 font-medium">See All</button>
+        </div>
         <div id="author-stories" class="grid grid-cols-2 gap-4"></div>
       </div>
     </div>
   </div>
 </div>
-
-<!-- Scripts para opciones y funcionalidad -->
-<script>
-  // Toggle menú de opciones
-  document.getElementById('options-button').addEventListener('click', function() {
-    const menu = document.getElementById('options-menu');
-    menu.classList.toggle('hidden');
-  });
-
-  // Toggling de texto en botón de seguir
-  function followAuthor() {
-    const btn = document.getElementById('follow-button');
-    const text = document.getElementById('follow-button-text');
-    const isFollowing = text.textContent === 'Seguir';
-    text.textContent = isFollowing ? 'Dejar de seguir' : 'Seguir';
-    // Aquí iría lógica real de seguimiento.
-  }
-</script>
 
 
 
@@ -10415,6 +10906,26 @@ firebase.auth().onAuthStateChanged(user => {
 </script>
 
 <script src="stories.js"></script>
+
+<script>
+// Funciones para perfil de autor
+function followAuthor() {
+  const text = document.getElementById('follow-button-text');
+  if (text) {
+    const isFollowing = text.textContent.trim() === 'Follow';
+    text.textContent = isFollowing ? 'Following' : 'Follow';
+  }
+}
+
+function blockAuthor() {
+  const text = document.getElementById('block-button-text');
+  if (text) {
+    const isBlocked = text.textContent.trim() === 'Block';
+    text.textContent = isBlocked ? 'Unblock' : 'Block';
+  }
+}
+</script>
+
 </body>
 </html>
 
