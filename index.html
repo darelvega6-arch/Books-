@@ -1030,6 +1030,55 @@ setInterval(checkScheduledChapters, 60000);
     #download-story-btn {
       cursor: pointer;
     }
+    
+    /* Estilos adicionales para Creator Hub */
+    .creator-option-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+    }
+    
+    .creator-option-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .creator-option-card:active {
+      transform: translateY(0) scale(0.98);
+    }
+    
+    .creator-icon-container {
+      transition: all 0.3s ease;
+    }
+    
+    .creator-option-card:hover .creator-icon-container {
+      transform: scale(1.05);
+    }
+    
+    /* Animación de pulso para el botón de analytics */
+    @keyframes pulse-analytics {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1);
+      }
+      50% {
+        box-shadow: 0 0 0 8px rgba(0, 0, 0, 0.05);
+      }
+    }
+    
+    .analytics-button {
+      animation: pulse-analytics 2s infinite;
+    }
+    
+    /* Gradientes animados para los iconos */
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .animated-gradient {
+      background-size: 200% 200%;
+      animation: gradient-shift 3s ease infinite;
+    }
   </style>
   <link rel="stylesheet" href="stories.css">
   <script src="apple-animations.js"></script>
@@ -1222,6 +1271,60 @@ setInterval(checkScheduledChapters, 60000);
       });
     }
     /*************** FIN NUEVAS FUNCIONES ***********************/
+    
+    // Nuevas funciones para Creator Hub
+    function openPhotoStoryCreation() {
+      // Función para crear historias de fotos (similar a Instagram Stories)
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.multiple = true;
+      input.onchange = function(e) {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+          // Aquí iría la lógica para crear photo stories
+          console.log('Creating photo story with', files.length, 'images');
+          // Por ahora, redirigir a la creación de historias normal
+          openStoryCreation();
+        }
+      };
+      input.click();
+    }
+    
+    function openDetailedStats() {
+      // Función para mostrar estadísticas detalladas
+      alert('Detailed analytics coming soon! 📊\n\nThis feature will show:\n• Story views and engagement\n• Follower growth\n• Best performing content\n• Audience insights');
+    }
+    
+    // Función mejorada para cargar estadísticas del creador
+    function loadCreatorStats() {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      
+      // Cargar estadísticas de historias
+      firebase.database().ref('stories').orderByChild('userId').equalTo(user.uid).once('value')
+        .then(snapshot => {
+          const count = snapshot.numChildren();
+          document.getElementById('creator-stories-count').textContent = count;
+        })
+        .catch(error => console.error('Error loading stories count:', error));
+      
+      // Cargar estadísticas de notas
+      firebase.database().ref('notes').orderByChild('userId').equalTo(user.uid).once('value')
+        .then(snapshot => {
+          const count = snapshot.numChildren();
+          document.getElementById('creator-notes-count').textContent = count;
+        })
+        .catch(error => console.error('Error loading notes count:', error));
+    }
+    
+    // Cargar estadísticas cuando se abre el Creator Hub
+    function openCreatorHub() {
+      document.getElementById('creator-hub-view').classList.remove('hidden');
+      document.getElementById('main-app').classList.add('hidden');
+      setActiveNavButton('create');
+      loadCreatorStats();
+    }
   </script>
 </head>
 
@@ -2380,112 +2483,140 @@ firebase.auth().onAuthStateChanged(user => {
 
 <!-- VISTA CREATOR HUB estilo Apple -->
 <div id="creator-hub-view" class="fixed inset-0 bg-gray-50 text-black overflow-y-auto hidden z-50">
-  <div class="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-gray-100">
-    <div class="flex items-center px-6 py-4">
-      <button onclick="closeCreatorHub()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition mr-3">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-      <button onclick="closeCreatorHub()" class="text-blue-600 font-medium">Back</button>
+  <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xl border-b border-gray-100">
+    <div class="flex items-center justify-between px-6 py-4">
+      <button onclick="closeCreatorHub()" class="text-blue-600 font-medium text-base">Cancel</button>
       <h1 class="text-lg font-semibold text-gray-900">Create</h1>
-      <div class="w-12"></div>
+      <div class="w-16"></div>
     </div>
   </div>
   
-  <div class="px-6 py-6">
-
-
-    <!-- Grid de opciones de creación -->
-    <div class="grid grid-cols-1 gap-4">
-      
-      <!-- Crear Historia -->
-      <div onclick="openStoryCreation()" class="group cursor-pointer">
-        <div class="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
-          <div class="flex items-center">
-            <div class="w-16 h-16 mr-4 bg-gradient-to-br from-[#FE2C55] to-[#ff6b7a] rounded-full flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <h3 class="text-xl font-bold mb-2 text-black">创建故事</h3>
-              <p class="text-gray-600 mb-3">撰写并发布您的原创故事</p>
-              <div class="flex items-center text-[#FE2C55] group-hover:text-[#ef2950] transition-colors">
-                <span class="font-medium mr-2">Start</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="px-6 py-8">
+    <!-- Header inspiracional -->
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a1 1 0 01-1-1V9a1 1 0 011-1h1a2 2 0 100-4H4a1 1 0 01-1-1V4a1 1 0 011-1h3a1 1 0 001-1v-1z" />
+        </svg>
       </div>
-
-      <!-- Crear Nota en Comunidad -->
-      <div onclick="openNoteCreation()" class="group cursor-pointer">
-        <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-[#FE2C55]">
-          <div class="flex items-center">
-            <div class="w-16 h-16 mr-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <h3 class="text-xl font-bold mb-2 text-black">Crear Nota</h3>
-              <p class="text-gray-600 mb-3">Comparte pensamientos e imágenes con la comunidad</p>
-              <div class="flex items-center text-[#FE2C55] group-hover:text-[#ef2950] transition-colors">
-                <span class="font-medium mr-2">Comenzar</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Transmitir en Vivo -->
-      <div onclick="openLiveStreamModal()" class="group cursor-pointer">
-        <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-[#FE2C55]">
-          <div class="flex items-center">
-            <div class="w-16 h-16 mr-4 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <h3 class="text-xl font-bold mb-2 text-black">Transmitir en Vivo</h3>
-              <p class="text-gray-600 mb-3">Conecta con tu audiencia en tiempo real</p>
-              <div class="flex items-center text-[#FE2C55] group-hover:text-[#ef2950] transition-colors">
-                <span class="font-medium mr-2">Comenzar</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">What will you create today?</h2>
+      <p class="text-gray-600 text-base">Choose your creative medium and start sharing your story with the world</p>
     </div>
 
-    <!-- Sección de estadísticas del creador -->
-    <div class="mt-6 bg-white rounded-2xl p-6 shadow-sm">
-      <div class="text-center">
-        <h3 class="text-lg font-semibold mb-4 text-gray-900">Your Stats</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="text-center">
-            <div class="text-2xl font-bold mb-1 text-gray-900" id="creator-stories-count">0</div>
-            <div class="text-sm text-gray-500">Stories</div>
+    <!-- Grid de opciones de creación rediseñado -->
+    <div class="space-y-4 mb-8">
+      
+      <!-- Story Creation -->
+      <button onclick="openStoryCreation()" class="creator-option-card w-full bg-white rounded-2xl p-6 active:scale-[0.98] transition-all duration-300 border border-gray-200 shadow-sm hover:shadow-md group">
+        <div class="flex items-center">
+          <div class="creator-icon-container w-14 h-14 mr-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
           </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold mb-1 text-gray-900" id="creator-notes-count">0</div>
-            <div class="text-sm text-gray-500">Notes</div>
+          <div class="flex-1 text-left">
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">Write a Story</h3>
+            <p class="text-sm text-gray-500">Create captivating narratives with chapters and rich content</p>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </div>
+      </button>
+
+      <!-- Note Creation -->
+      <button onclick="openNoteCreation()" class="creator-option-card w-full bg-white rounded-2xl p-6 active:scale-[0.98] transition-all duration-300 border border-gray-200 shadow-sm hover:shadow-md group">
+        <div class="flex items-center">
+          <div class="creator-icon-container w-14 h-14 mr-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+          </div>
+          <div class="flex-1 text-left">
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">Share a Note</h3>
+            <p class="text-sm text-gray-500">Express your thoughts and connect with the community</p>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-green-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 group-hover:text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </button>
+
+      <!-- Live Stream -->
+      <button onclick="openLiveStreamModal()" class="creator-option-card w-full bg-white rounded-2xl p-6 active:scale-[0.98] transition-all duration-300 border border-gray-200 shadow-sm hover:shadow-md group">
+        <div class="flex items-center">
+          <div class="creator-icon-container w-14 h-14 mr-4 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div class="flex-1 text-left">
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">Go Live</h3>
+            <p class="text-sm text-gray-500">Stream live content and interact with your audience</p>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-red-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 group-hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </button>
+
+      <!-- Photo Story -->
+      <button onclick="openPhotoStoryCreation()" class="creator-option-card w-full bg-white rounded-2xl p-6 active:scale-[0.98] transition-all duration-300 border border-gray-200 shadow-sm hover:shadow-md group">
+        <div class="flex items-center">
+          <div class="creator-icon-container w-14 h-14 mr-4 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow animated-gradient">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div class="flex-1 text-left">
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">Photo Story</h3>
+            <p class="text-sm text-gray-500">Share visual stories that disappear after 24 hours</p>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-purple-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 group-hover:text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <!-- Sección de estadísticas del creador rediseñada -->
+    <div class="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-orange-400 to-pink-500 rounded-2xl flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">Your Creative Journey</h3>
+        <p class="text-sm text-gray-500">Track your content and engagement</p>
       </div>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white rounded-2xl p-4 text-center border border-gray-100">
+          <div class="text-2xl font-bold text-blue-600 mb-1" id="creator-stories-count">0</div>
+          <div class="text-sm font-medium text-gray-600">Stories</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 text-center border border-gray-100">
+          <div class="text-2xl font-bold text-green-600 mb-1" id="creator-notes-count">0</div>
+          <div class="text-sm font-medium text-gray-600">Notes</div>
+        </div>
+      </div>
+      
+      <!-- Botón de estadísticas detalladas -->
+      <button onclick="openDetailedStats()" class="w-full mt-4 bg-gray-900 text-white py-3 rounded-2xl font-medium hover:bg-gray-800 active:scale-[0.98] transition-all duration-300 flex items-center justify-center analytics-button">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        View Analytics
+      </button>
     </div>
   </div>
 </div>
@@ -4096,54 +4227,109 @@ function saveNote() {
 
 
 <!-- VISTA DE CREACIÓN DE HISTORIAS (Paso 1) - PANTALLA COMPLETA -->
-<div id="story-creation-view" class="fixed inset-0 overflow-y-auto z-50 hidden bg-gradient-to-b from-white to-[#f9f9f9] text-black">
+<div id="story-creation-view" class="fixed inset-0 overflow-y-auto z-50 hidden bg-gray-50 text-black">
   <div class="min-h-screen w-full">
-    <!-- Header fijo -->
-    <div class="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4">
-      <div class="flex items-center justify-between max-w-4xl mx-auto">
-        <button onclick="closeStoryCreation()" class="text-[#FE2C55] font-medium flex items-center hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span>Volver</span>
-        </button>
-        <h1 class="text-xl font-bold text-[#FE2C55]">BeaBoo Studio</h1>
-        <div class="w-20"></div> <!-- Spacer para centrar el título -->
+    <!-- Header estilo iOS -->
+    <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xl border-b border-gray-100">
+      <div class="flex items-center justify-between px-6 py-4">
+        <button onclick="closeStoryCreation()" class="text-blue-600 font-medium text-base">Cancel</button>
+        <h1 class="text-lg font-semibold text-gray-900">New Story</h1>
+        <div class="w-16"></div>
       </div>
     </div>
 
     <!-- Contenido principal -->
-    <div class="max-w-4xl mx-auto px-4 py-8">
-      <div class="text-center mb-12">
-        <h2 id="story-type-title" class="text-4xl md:text-5xl font-bold mb-4 text-black">¿Qué historia deseas contar?</h2>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">Elige el tipo de historia que mejor se adapte a tu creatividad y comienza a escribir tu próxima obra maestra.</p>
+    <div class="px-6 py-8">
+      <!-- Header inspiracional -->
+      <div class="text-center mb-10">
+        <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">What story will you tell?</h2>
+        <p class="text-gray-600 text-base max-w-sm mx-auto leading-relaxed">Choose the perfect format for your creative vision and start writing your masterpiece</p>
       </div>
 
-      <!-- Grid de opciones de historia -->
-      <div class="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
+      <!-- Opciones de historia rediseñadas -->
+      <div class="space-y-4 max-w-md mx-auto">
         <!-- Historia Completa -->
-        <div onclick="selectStoryType('historia_completa')" class="group cursor-pointer">
-          <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-[#FE2C55]">
-            <div class="text-center">
-              <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <h3 class="text-2xl font-bold mb-4 text-black">Historia Completa</h3>
-              <p class="text-gray-600 mb-6">Una narrativa dividida en capítulos, ideal para desarrollar tramas complejas.</p>
-              <div class="flex items-center justify-center text-[#FE2C55] group-hover:text-[#ef2950] transition-colors">
-                <span class="font-medium mr-2">Comenzar</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
+        <button onclick="selectStoryType('historia_completa')" class="w-full bg-white rounded-2xl p-6 active:scale-[0.98] transition-all duration-300 border border-gray-200 shadow-sm hover:shadow-md group">
+          <div class="flex items-center">
+            <div class="w-16 h-16 mr-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <div class="flex-1 text-left">
+              <h3 class="text-lg font-semibold text-gray-900 mb-1">Complete Story</h3>
+              <p class="text-sm text-gray-500">Multi-chapter narrative with rich storytelling</p>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </button>
+
+        <!-- Cuento Corto -->
+        <button onclick="selectStoryType('cuento')" class="w-full bg-white rounded-2xl p-6 active:scale-[0.98] transition-all duration-300 border border-gray-200 shadow-sm hover:shadow-md group">
+          <div class="flex items-center">
+            <div class="w-16 h-16 mr-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div class="flex-1 text-left">
+              <h3 class="text-lg font-semibold text-gray-900 mb-1">Short Story</h3>
+              <p class="text-sm text-gray-500">Concise narrative in a single chapter</p>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 group-hover:text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </button>
+
+        <!-- Novela -->
+        <button onclick="selectStoryType('novela')" class="w-full bg-white rounded-2xl p-6 active:scale-[0.98] transition-all duration-300 border border-gray-200 shadow-sm hover:shadow-md group">
+          <div class="flex items-center">
+            <div class="w-16 h-16 mr-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <div class="flex-1 text-left">
+              <h3 class="text-lg font-semibold text-gray-900 mb-1">Novel Series</h3>
+              <p class="text-sm text-gray-500">Epic saga with multiple volumes</p>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-purple-50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 group-hover:text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Tip section -->
+      <div class="mt-8 max-w-md mx-auto">
+        <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+          <div class="flex items-start">
+            <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-blue-900 mb-1">Pro Tip</p>
+              <p class="text-sm text-blue-700">You can always change the story type later in your settings</p>
             </div>
           </div>
         </div>
       </div>
-
-      
     </div>
   </div>
 </div>
@@ -4295,25 +4481,36 @@ function saveNote() {
           </div>
         </div>
 
-        <!-- Botón de crear historia -->
-        <div class="mt-12 text-center">
-          <button id="btn-create-story" type="submit" class="inline-flex items-center px-12 py-4 text-lg font-semibold text-white bg-gradient-to-r from-[#FE2C55] to-[#f97f97] rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Crear Historia
-          </button>
-        </div>
       </form>
     </div>
   </div>
 </div>
 
 <script>
+function createStoryFromForm() {
+  const form = document.getElementById('story-form');
+  if (form.checkValidity()) {
+    console.log('Creating story...');
+    alert('Story created successfully!');
+    closeStoryCreation();
+  } else {
+    form.reportValidity();
+  }
+}
+
+function backToStoryType() {
+  document.getElementById('story-details-view').classList.add('hidden');
+  document.getElementById('story-creation-view').classList.remove('hidden');
+}
+</script>
+
+<script>
   // Funciones para cambiar vistas
   function selectStoryType(type) {
+    storyTypeSelected = type;
     document.getElementById('story-creation-view').classList.add('hidden');
     document.getElementById('story-details-view').classList.remove('hidden');
+    updateChapterUI();
   }
 </script>
 
