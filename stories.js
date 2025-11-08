@@ -40,15 +40,38 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('story-upload-form').addEventListener('submit', handleStoryUpload);
     document.getElementById('story-viewer-close').addEventListener('click', closeStoryViewer);
 
-    // Load stories automatically on page load
-    setTimeout(() => {
-        loadStories();
-    }, 500);
-    
-    // Reload stories every 30 seconds to show new stories from other users
-    setInterval(() => {
-        loadStories();
-    }, 30000);
+    // Load stories only when user is authenticated
+    let storiesInterval = null;
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // Cargar historias de manera segura
+            if (window.safeLoad) {
+                window.safeLoad(loadStories, 'stories', 10000);
+            } else {
+                loadStories();
+            }
+            
+            // Limpiar intervalo anterior si existe
+            if (storiesInterval) {
+                clearInterval(storiesInterval);
+            }
+            
+            // Reload stories every 2 minutes (reduced frequency)
+            storiesInterval = setInterval(() => {
+                if (window.safeLoad) {
+                    window.safeLoad(loadStories, 'stories', 10000);
+                } else {
+                    loadStories();
+                }
+            }, 120000); // 2 minutos
+        } else {
+            // Limpiar intervalo si el usuario cierra sesión
+            if (storiesInterval) {
+                clearInterval(storiesInterval);
+                storiesInterval = null;
+            }
+        }
+    });
 
     function handleFileSelect(e) {
         const file = e.target.files[0];
@@ -85,8 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadStories() {
         const currentUser = auth.currentUser;
         if (!currentUser) {
-            // Intentar de nuevo en 1 segundo si el usuario no está autenticado aún
-            setTimeout(loadStories, 1000);
+            console.log('Usuario no autenticado, esperando...');
             return;
         }
 
